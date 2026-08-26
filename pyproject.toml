@@ -1,0 +1,20 @@
+[project]
+name = "deteccion_de_caidas"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "kaz-py", email = "juanmanuelinsaurraldeniven2021@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "opencv-python>=5.0.0.93",
+    "ultralytics>=8.4.129",
+]
+
+[project.scripts]
+1er-2do-semestre = "1er_2do_semestre:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
