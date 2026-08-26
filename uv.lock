@@ -315,12 +315,14 @@ name = "deteccion-de-caidas"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "numpy" },
     { name = "opencv-python" },
     { name = "ultralytics" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "numpy", specifier = ">=2.3.5" },
     { name = "opencv-python", specifier = ">=5.0.0.93" },
     { name = "ultralytics", specifier = ">=8.4.129" },
 ]

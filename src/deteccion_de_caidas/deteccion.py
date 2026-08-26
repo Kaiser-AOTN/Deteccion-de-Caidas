@@ -1,11 +1,12 @@
 import cv2
-import math
+
 from collections import deque
 from ultralytics import YOLO
+import numpy as np
 
 #Configuración 
 MODEL_PATH = 'yolov8n-pose.pt'  
-FALL_ASPECT_RATIO = 1.3
+FALL_ASPECT_RATIO = 1.5
 FALL_ANGLE_THRESHOLD = 45
 CONFIRM_FRAMES = 10
 HISTORY_LEN = 15
@@ -19,9 +20,8 @@ cap = cv2.VideoCapture(0)
 
 # Función para calcular el ángulo del torso
 def torso_angle(shoulder_mid, hip_mid):
-    dx = hip_mid[0] - shoulder_mid[0]
-    dy = hip_mid[1] - shoulder_mid[1]
-    return math.degrees(math.atan2(abs(dx), abs(dy) + 1e-6))
+    dx, dy = np.abs(hip_mid - shoulder_mid)
+    return float(np.degrees(np.arctan2(dx, dy + 1e-6)))
 
 
 while cap.isOpened():
@@ -40,20 +40,22 @@ while cap.isOpened():
         if r.boxes is None or len(r.boxes) == 0 or r.keypoints is None:
             continue
 
+        #Obtener las cajas delimitadoras y los keypoints de las personas detectadas
+        boxes = r.boxes.xyxy.cpu().numpy()
+        keypoints = r.keypoints.xy.cpu().numpy()
+
         #Iterar sobre cada persona detectada y sus keypoints
-        for box, kpts in zip(r.boxes, r.keypoints.xy):
+        for box, kpts in zip(boxes, keypoints):
 
             # Calcular el aspecto y el ángulo del torso
-            x1, y1, x2, y2 = box.xyxy[0]
+            x1, y1, x2, y2 = box
             w, h = x2 - x1, y2 - y1
-            aspect_ratio = w / (h + 1e-6)
+            aspect_ratio = float(w / (h + 1e-6))
             
             # Calcular el punto medio de los hombros
-            shoulder_mid = ((kpts[L_SHOULDER][0] + kpts[R_SHOULDER][0]) / 2,
-                            (kpts[L_SHOULDER][1] + kpts[R_SHOULDER][1]) / 2)
+            shoulder_mid = (kpts[L_SHOULDER] + kpts[R_SHOULDER]) / 2.0
             # Calcular el punto medio de las caderas
-            hip_mid = ((kpts[L_HIP][0] + kpts[R_HIP][0]) / 2,
-                    (kpts[L_HIP][1] + kpts[R_HIP][1]) / 2)
+            hip_mid = (kpts[L_HIP] + kpts[R_HIP]) / 2.0
 
             # Calcular el angulo del torso y determinar si es sospechoso de caída
             angle = torso_angle(shoulder_mid, hip_mid)
@@ -69,6 +71,7 @@ while cap.isOpened():
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
             cv2.putText(frame, f"ang:{angle:.0f} ar:{aspect_ratio:.2f}",
                         (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                        
     # Mostrar alerta de caída si se detecta
     if fall_detected:
         cv2.putText(frame, "CAIDA DETECTADA", (30, 50),
