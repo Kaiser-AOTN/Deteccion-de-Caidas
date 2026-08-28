@@ -40,36 +40,47 @@ while cap.isOpened():
         if r.boxes is None or len(r.boxes) == 0 or r.keypoints is None:
             continue
 
-        #Obtener las cajas delimitadoras y los keypoints de las personas detectadas
+        # Obtener cajas, clases y confianzas de detección
         boxes = r.boxes.xyxy.cpu().numpy()
+        clss = r.boxes.cls.cpu().numpy()
+        confs = r.boxes.conf.cpu().numpy()
         keypoints = r.keypoints.xy.cpu().numpy()
+        kp_confs = r.keypoints.conf.cpu().numpy() if r.keypoints.conf is not None else None
 
-        #Iterar sobre cada persona detectada y sus keypoints
-        for box, kpts in zip(boxes, keypoints):
+        for idx, (box, cls, conf, kpts) in enumerate(zip(boxes, clss, confs, keypoints)):
+            
+            # --- FILTRO 1: Solo procesar si es una PERSONA (clase 0) con buena confianza (> 50%) ---
+            if int(cls) != 0 or conf < 0.50:
+                continue
 
-            # Calcular el aspecto y el ángulo del torso
+            # --- FILTRO 2: Validar visibilidad de hombros y caderas ---
+            if kp_confs is not None:
+                # Si los puntos de hombros o caderas tienen muy poca confianza, descartar (es un objeto)
+                if (kp_confs[idx][L_SHOULDER] < 0.4 or kp_confs[idx][R_SHOULDER] < 0.4 or
+                    kp_confs[idx][L_HIP] < 0.4 or kp_confs[idx][R_HIP] < 0.4):
+                    continue
+
+            # Extraer coordenadas de la persona confirmada
             x1, y1, x2, y2 = box
             w, h = x2 - x1, y2 - y1
             aspect_ratio = float(w / (h + 1e-6))
-            
-            # Calcular el punto medio de los hombros
-            shoulder_mid = (kpts[L_SHOULDER] + kpts[R_SHOULDER]) / 2.0
-            # Calcular el punto medio de las caderas
-            hip_mid = (kpts[L_HIP] + kpts[R_HIP]) / 2.0
 
-            # Calcular el angulo del torso y determinar si es sospechoso de caída
+            # Puntos medios de torso
+            shoulder_mid = (kpts[L_SHOULDER] + kpts[R_SHOULDER]) / 2.0
+            hip_mid = (kpts[L_HIP] + kpts[R_HIP]) / 2.0
             angle = torso_angle(shoulder_mid, hip_mid)
+
+            # Evaluación de sospecha de caída
             is_suspect = aspect_ratio > FALL_ASPECT_RATIO and angle > FALL_ANGLE_THRESHOLD
             history.append(is_suspect)
 
-            # Si se han detectado suficientes frames sospechosos, marcar como caída
             if len(history) == HISTORY_LEN and sum(history) >= CONFIRM_FRAMES:
                 fall_detected = True
 
-            # Dibujar la caja delimitadora y el texto en el frame
+            # Dibujar etiqueta de persona confirmada con su confianza
             color = (0, 0, 255) if fall_detected else (0, 255, 0)
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-            cv2.putText(frame, f"ang:{angle:.0f} ar:{aspect_ratio:.2f}",
+            cv2.putText(frame, f"Persona {conf:.2f} | ang:{angle:.0f}",
                         (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
                         
     # Mostrar alerta de caída si se detecta
