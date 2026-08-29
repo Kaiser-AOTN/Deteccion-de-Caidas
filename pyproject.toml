@@ -1,22 +1,28 @@
 [project]
-name = "deteccion_de_caidas"
+name = "deteccion-de-caidas"
 version = "0.1.0"
-description = "Add your description here"
+description = "Sistema de detección de caídas y señal de ayuda"
 readme = "README.md"
 authors = [
     { name = "kaz-py", email = "juanmanuelinsaurraldeniven2021@gmail.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "mediapipe>=1.0.1",
+    "mediapipe>=0.10.14,<0.11.0",
     "numpy>=2.3.5",
     "opencv-python>=5.0.0.93",
     "ultralytics>=8.4.129",
 ]
 
 [project.scripts]
-1er-2do-semestre = "1er_2do_semestre:main"
+deteccion-caidas = "deteccion_de_caidas.main:main"
 
 [build-system]
-requires = ["uv_build>=0.12.5,<0.13.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
