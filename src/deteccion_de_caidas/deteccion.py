@@ -84,9 +84,7 @@ while cap.isOpened():
             track_history[person_id].append(is_suspect)
 
             # Verificar si la persona ha caído
-            person_fell = False
             if len(track_history[person_id]) == HISTORY_LEN and sum(track_history[person_id]) >= CONFIRM_FRAMES:
-                person_fell = True
                 any_fall_detected = True
                 fall_detected = True
 
