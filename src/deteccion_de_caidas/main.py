@@ -17,12 +17,13 @@ else:
     from .deteccion import Fall_Detection
     from .signal_for_help import SignalForHelpDetector
 
+
 def main():
     print("Iniciando Sistema Integrado de Vigilancia AI...")
 
     # Cargar los modelos entrenados
-    detector_caidas = Fall_Detection(model_path="yolov8n-pose.pt")
-    detector_gestos = SignalForHelpDetector(model_path="exp.pt")
+    detector_caidas = Fall_Detection()
+    detector_gestos = SignalForHelpDetector()
 
     # Iniciar la cámara web principal
     cap = cv2.VideoCapture(0)
@@ -48,7 +49,6 @@ def main():
 
         # 1. Procesar el detector de señales de auxilio
         alerta_auxilio = detector_gestos.detect_signal_for_help(frame)
-        
         # 2. Procesar el detector de caídas de personas
         frame, alerta_caida = detector_caidas.run_detection(frame)
 
@@ -58,7 +58,6 @@ def main():
         # Mostrar banners de alerta globales si se detecta algún peligro
         if alerta_caida:
             cv2.putText(frame, "¡ALERTA: CAIDA DETECTADA!", (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 3)
-            
         if alerta_auxilio:
             cv2.putText(frame, "¡ALERTA: SENAL DE AYUDA!", (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 165, 255), 3)
 
@@ -72,6 +71,7 @@ def main():
     # Liberar recursos y cerrar la ventana al finalizar
     cap.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
