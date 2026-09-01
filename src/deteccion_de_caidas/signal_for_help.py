@@ -10,7 +10,7 @@ from mediapipe.tasks.python import vision as mp_vision
 class SignalForHelpDetector:
     def __init__(self,
                 model_path="hand_landmarker.task",
-                max_num_hands=2,
+                max_num_hands=8,
                 min_detection_confidence=0.6,
                 min_presence_confidence=0.6,
                 min_tracking_confidence=0.6):
@@ -71,11 +71,11 @@ class SignalForHelpDetector:
     # ------------------------------------------------------------------ #
     # Detección principal
     # ------------------------------------------------------------------ #
-
+    
     def detect_signal_for_help(self, frame):
         """Procesa un frame BGR de OpenCV, dibuja el estado sobre él y
         devuelve True si se confirmó la señal de auxilio en este frame."""
-
+        
         alto, ancho, _ = frame.shape
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
@@ -161,7 +161,7 @@ class SignalForHelpDetector:
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, grosor)
             if mensaje:
-                cv2.putText(frame, f"[{etiqueta} {confianza:.2f}] {mensaje}",
+                cv2.putText(frame, f"[ {confianza:.2f}] {mensaje}", 
                             (x1, max(0, y1 - 10)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
 

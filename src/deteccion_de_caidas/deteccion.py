@@ -5,15 +5,25 @@ from .base_detector import BaseDetector
 
 # Hereda de BaseDetector para reutilizar la carga de YOLO
 class Fall_Detection(BaseDetector):
-    def __init__(self, model_path='yolov8n-pose.pt', fall_aspect_ratio=1.0, fall_angle_threshold=45, confirm_frames=10, history_len=15):
+    def __init__(self, 
+    model_path='yolov8n-pose.pt',
+    fall_aspect_ratio=1.0,       # Proporción ancho/alto de la caja
+    fall_angle_threshold=45,     # Ángulo de inclinación del torso
+    confirm_frames=10,           # Cuántos fotogramas seguidos debe durar la postura para confirmar caída
+    history_len=15,              # Tamaño de la memoria temporal para cada persona
+    height_drop_ratio=0.40,      # Cae si la altura actual es menor al 40% de la altura "de pie"
+    standing_angle_max=20):      # Ángulo máximo para considerar que la persona está de pie (actualiza altura ref.)
+
         # Inicializa la clase padre pasando el modelo de cuerpo humano
         super().__init__(model_path)
         
         # Umbrales para decidir cuándo una postura cuenta como caída
-        self.fall_aspect_ratio = fall_aspect_ratio # Proporción ancho/alto de la caja
-        self.fall_angle_threshold = fall_angle_threshold # Ángulo de inclinación del torso
-        self.confirm_frames = confirm_frames # Cuántos fotogramas seguidos debe durar la postura
-        self.history_len = history_len # Tamaño de la memoria temporal
+        self.fall_aspect_ratio = fall_aspect_ratio  # Proporción ancho/alto de la caja que indica una caída
+        self.fall_angle_threshold = fall_angle_threshold # Ángulo de inclinación del torso que indica una caída
+        self.confirm_frames = confirm_frames # Cuántos fotogramas seguidos debe durar la postura para confirmar caída
+        self.history_len = history_len # Tamaño de la memoria temporal para cada persona
+        self.height_drop_ratio = height_drop_ratio # Cae si la altura actual es menor al 55% de la altura "de pie"
+        self.standing_angle_max = standing_angle_max # Ángulo máximo para considerar que la persona está de pie (actualiza altura ref.)
         
         # Índices de las articulaciones del cuerpo humano en YOLO Pose
         self.L_SHOULDER, self.R_SHOULDER = 5, 6
@@ -21,6 +31,8 @@ class Fall_Detection(BaseDetector):
         
         # Historial de memoria para guardar la postura de cada persona
         self.track_history = {}
+        # Altura máxima registrada ("de pie") por persona, para distinguir agacharse de una caída real
+        self.max_height_history = {}
 
     def Generic_angle(self, shoulder_mid, hip_mid):
         """Calcula el ángulo de inclinación entre los hombros y las caderas"""
@@ -68,9 +80,22 @@ class Fall_Detection(BaseDetector):
                     active_ids.append(person_id)
                     if person_id not in self.track_history:
                         self.track_history[person_id] = deque(maxlen=self.history_len)
+                    if person_id not in self.max_height_history:
+                        self.max_height_history[person_id] = h
 
-                    # Determinar si la postura en este instante parece una caída
-                    is_suspect = aspect_ratio > self.fall_aspect_ratio or angle > self.fall_angle_threshold
+                    # Actualiza la altura de referencia ("de pie") solo cuando el torso está erguido
+                    if angle < self.standing_angle_max:
+                        self.max_height_history[person_id] = max(self.max_height_history[person_id], h)
+
+                    ref_height = self.max_height_history[person_id] # Altura de referencia para esta persona
+                    height_ratio = h / (ref_height + 1e-6) # Proporción de altura actual respecto a la altura de referencia
+
+                    # Postura sospechosa de caída (aspecto u ángulo)
+                    posture_suspect = aspect_ratio > self.fall_aspect_ratio or angle > self.fall_angle_threshold
+                    # Solo se considera caída real si ADEMÁS hubo una caída notable de altura
+                    # (agacharse reduce la altura moderadamente, caer la reduce drásticamente)
+                    is_suspect = posture_suspect and height_ratio < self.height_drop_ratio
+
                     self.track_history[person_id].append(is_suspect)
 
                     # Si ha mantenido la postura de caída por suficiente tiempo, confirmar alerta
@@ -78,7 +103,7 @@ class Fall_Detection(BaseDetector):
                         person_fell = True
                         any_fall_detected = True
                 else:
-                    # Si no hay ID, evaluamos únicamente el estado del fotograma actual
+                    # Sin ID no hay historial de altura de referencia; usamos solo la postura del fotograma actual
                     person_fell = aspect_ratio > self.fall_aspect_ratio or angle > self.fall_angle_threshold
                     if person_fell: 
                         any_fall_detected = True
@@ -93,5 +118,6 @@ class Fall_Detection(BaseDetector):
         stale_ids = [pid for pid in self.track_history.keys() if pid not in active_ids]
         for pid in stale_ids:
             del self.track_history[pid]
+            self.max_height_history.pop(pid, None)
 
         return frame, any_fall_detected

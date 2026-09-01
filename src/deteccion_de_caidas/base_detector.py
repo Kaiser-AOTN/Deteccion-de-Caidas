@@ -11,7 +11,7 @@ class BaseDetector:
         Se encarga de pasarle el fotograma a YOLO y extraer los datos limpios.
         """
         # Ejecuta el seguimiento (tracking) sobre el fotograma actual
-        results = self.model.track(frame, persist=True, verbose=False)
+        results = self.model.track(frame, persist=True, verbose=False, device=0)
         
         for r in results:
             # Si no hay detecciones en la pantalla, saltamos al siguiente fotograma

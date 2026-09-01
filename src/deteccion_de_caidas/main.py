@@ -27,8 +27,8 @@ def main():
 
     # Iniciar la cámara web principal
     cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     if not cap.isOpened():
         raise RuntimeError("No se pudo conectar con la cámara web.")
@@ -41,7 +41,7 @@ def main():
         if not ret:
             print("Error leyendo el fotograma de la cámara.")
             break
-
+        frame = cv2.flip(frame, 1)  # Voltear horizontalmente para efecto espejo
         # Calcular los fotogramas por segundo (FPS)
         current_time = time.time()
         fps = 1 / (current_time - prev_time) if (current_time - prev_time) > 0 else 0
