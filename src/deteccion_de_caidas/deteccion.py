@@ -6,15 +6,15 @@ from .base_detector import BaseDetector
 # Hereda de BaseDetector para reutilizar la carga de YOLO
 class Fall_Detection(BaseDetector):
     def __init__(self,
-                 model_path='yolov8n-pose.pt',
-                 fall_aspect_ratio=1.3,         # más estricto que antes
-                 fall_angle_threshold=65,
-                 fall_velocity_threshold=0.6,   # % de altura perdida en la ventana
-                 height_drop_ratio=0.55,        # % de altura perdida vs máx. histórico
-                 confirm_frames=10,
-                 history_len=15,
-                 velocity_window=5,
-                 floor_persist_frames=45):  # ~1.5s a 30fps: tiempo quieto en el piso para confirmar
+                model_path='yolov8n-pose.pt',
+                fall_aspect_ratio=1.3,         # más estricto que antes
+                fall_angle_threshold=65,
+                fall_velocity_threshold=0.6,   # % de altura perdida en la ventana
+                height_drop_ratio=0.55,        # % de altura perdida vs máx. histórico
+                confirm_frames=10,              # cantidad de frames sospechosos para confirmar caída
+                history_len=15,  # cantidad de frames a considerar para la historia de sospecha
+                velocity_window=5, # cantidad de frames a considerar para la velocidad de caída 
+                floor_persist_frames=45):  # ~1.5s a 30fps: tiempo quieto en el piso para confirmar
 
         super().__init__(model_path)
 
