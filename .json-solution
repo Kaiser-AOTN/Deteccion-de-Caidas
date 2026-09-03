@@ -1,0 +1,44 @@
+SOLUCION PARA PROBLEMAS CON EL HAND LANDMARKER
+// ver tus archivos .json si ya tienes solo elimina lo de adentro y copia las lineas 
+//me funciono para el error de copilacion
+//crear en tu .vscode un archivo llamado launch.json y copia esto 
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
+//tambien crea otro de nombre c_cpp_properties.json y copia esto
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\msys64\\ucrt64\\bin\\gcc.exe",
+            "cStandard": "c17",
+            "cppStandard": "gnu++20",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}
+//despues de crear los archivos .json seguir estos pasos en tu terminal
+paso 1: cd Deteccion-de-Caidas  
+paso 2: cd src
+paso 3: cd deteccion_de_caidas
+paso 4: .\main.py
+// suerte ;)
