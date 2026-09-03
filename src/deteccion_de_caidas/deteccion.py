@@ -112,7 +112,7 @@ class Fall_Detection(BaseDetector):
 
                     # Camino 1: detecta el EVENTO de caer (postura + movimiento brusco)
                     fast_fall = (len(self.track_history[person_id]) == self.history_len and
-                                 sum(self.track_history[person_id]) >= self.confirm_frames)
+                                sum(self.track_history[person_id]) >= self.confirm_frames)
 
                     # Camino 2: detecta que la persona SIGUE en el piso, sin depender de velocidad.
                     # Cubre: personas que ya estaban caídas al empezar el tracking, o que dejaron
