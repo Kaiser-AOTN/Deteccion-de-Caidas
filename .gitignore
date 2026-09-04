@@ -13,3 +13,4 @@ wheels/
 yolov8n-pose.pt
 yolov8n.pt
 weights/
+fall.pt
