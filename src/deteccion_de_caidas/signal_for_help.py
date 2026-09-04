@@ -5,11 +5,11 @@ import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
-
+import os
 
 class SignalForHelpDetector:
     def __init__(self,
-                model_path="hand_landmarker.task",
+            model_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "hand_landmarker.task"),
                 max_num_hands=8,
                 min_detection_confidence=0.6,
                 min_presence_confidence=0.6,
